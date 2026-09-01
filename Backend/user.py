@@ -9,7 +9,7 @@ class User:
     def get_profile(self):
         # returns user data as a dictionary fofr the API to send back.
         return {
-            "user_id": self.id,
+            "user_id": self.user_id,
             "name": self.name,
             "email": self.email
         }

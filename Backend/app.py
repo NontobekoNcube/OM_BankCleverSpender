@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 from db import create_tables, connect_db
 from user import User
 
@@ -26,5 +26,23 @@ def register_user():
     user = User(name, email, user_id)
     return jsonify(user.get_profile()), 201
 
+@app.route('/user/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row is None:
+        return jsonify({"error": "User not found"}), 404
+
+    user = User(row[1], row[2], row[0])
+    return jsonify(user.get_profile()), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+
