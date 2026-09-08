@@ -22,6 +22,9 @@ def home():
 def register_user():
     # get the JSON from the frontend and convert it to a Python dictionary
     data = request.get_json()
+    #check if data exists and is a dictionary
+    if not data or not isinstance(data, dict):
+        return jsonify({"error": "Invalid input. JSON data is required."}), 400
 
     # read name and email from the dictionary   
     name = data.get('name')
