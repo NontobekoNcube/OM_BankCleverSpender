@@ -31,7 +31,8 @@ def register_user():
     email = data.get('email')
 
     #data validation: check if name and email are provided in the right format,
-    #used individual checks to be specific about what is wrong with the input, instead of a generic error message for user comfort and clarity
+    #used individual 
+    # checks to be specific about what is wrong with the input, instead of a generic error message for user comfort and clarity
     if not name:
         return jsonify({"error": "Invalid input. Name is required."}), 400
     if not email:
