@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CleverSpender</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      color: #1a202c;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: #2b6cb0;
+    }
+
+    #api-status {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      background: #bee3f8;
+      color: #2c5282;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-width: 480px;
+      margin: 0 auto 1.5rem auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: #2d3748;
+      border-bottom: 2px solid #ebf4ff;
+      padding-bottom: 0.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 0.25rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin-bottom: 0.9rem;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #4299e1;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.7rem;
+      background: #2b6cb0;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #2c5282; }
+
+    .response-box {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+      display: none;
+    }
+
+    .response-box.success {
+      background: #f0fff4;
+      border: 1px solid #9ae6b4;
+      color: #22543d;
+      display: block;
+    }
+
+    .response-box.error {
+      background: #fff5f5;
+      border: 1px solid #fc8181;
+      color: #742a2a;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>CleverSpender</h1>
+    <span id="api-status">Checking API...</span>
+  </header>
+
+  <!-- Register User -->
+  <div class="card">
+    <h2>Register User</h2>
+    <label for="reg-name">Name</label>
+    <input type="text" id="reg-name" placeholder="e.g. Nontobeko" />
+
+    <label for="reg-email">Email</label>
+    <input type="email" id="reg-email" placeholder="e.g. nonto@email.com" />
+
+    <button onclick="registerUser()">Register</button>
+    <div id="reg-response" class="response-box"></div>
+  </div>
+
+  <!-- Lookup User -->
+  <div class="card">
+    <h2>Look Up User by ID</h2>
+    <label for="lookup-id">User ID</label>
+    <input type="number" id="lookup-id" placeholder="e.g. 1" min="1" />
+
+    <button onclick="getUser()">Fetch User</button>
+    <div id="lookup-response" class="response-box"></div>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://127.0.0.1:5000';
+
+    // Check API health on load
+    async function checkApiStatus() {
+      const statusEl = document.getElementById('api-status');
+      try {
+        const res = await fetch(`${BASE_URL}/`);
+        const data = await res.json();
+        statusEl.textContent = data.message || 'API connected';
+        statusEl.style.background = '#c6f6d5';
+        statusEl.style.color = '#22543d';
+      } catch {
+        statusEl.textContent = 'API unreachable — is Flask running?';
+        statusEl.style.background = '#fed7d7';
+        statusEl.style.color = '#742a2a';
+      }
+    }
+
+    function showResponse(elId, data, isError) {
+      const el = document.getElementById(elId);
+      el.textContent = JSON.stringify(data, null, 2);
+      el.className = `response-box ${isError ? 'error' : 'success'}`;
+    }
+
+    async function registerUser() {
+      const name  = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+
+      try {
+        const res = await fetch(`${BASE_URL}/user/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email })
+        });
+        const data = await res.json();
+        showResponse('reg-response', data, !res.ok);
+      } catch (err) {
+        showResponse('reg-response', { error: 'Could not reach API.' }, true);
+      }
+    }
+
+    async function getUser() {
+      const userId = document.getElementById('lookup-id').value.trim();
+      if (!userId) {
+        showResponse('lookup-response', { error: 'Please enter a user ID.' }, true);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BASE_URL}/user/${userId}`);
+        const data = await res.json();
+        showResponse('lookup-response', data, !res.ok);
+      } catch (err) {
+        showResponse('lookup-response', { error: 'Could not reach API.' }, true);
+      }
+    }
+
+    checkApiStatus();
+  </script>
+</body>
+</html>
+</parameter>
+</invoke>
+<footer>Von Syntea mit KI erstellt – bitte prüfe die Inhalte.</footer>
