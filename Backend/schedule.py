@@ -21,6 +21,6 @@ class Schedule(db.Model):
         elif self.time_window == "evening":
             return "17:00" <= current_time <= "20:59"
         elif self.time_window == "night":
-            return "21:00" <= current_time <= "05:59"
+            return current_time >= "21:00" or current_time < "05:59"
         return False
         
